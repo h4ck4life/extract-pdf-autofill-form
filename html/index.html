@@ -457,6 +457,8 @@
             localStorage.getItem("isDarkMode") === "true" ||
             (localStorage.getItem("isDarkMode") === null &&
               window.matchMedia("(prefers-color-scheme: dark)").matches),
+          displayScale: 1.0, // Scale for display
+          ocrScale: 1.5, // Higher scale for OCR extraction (better quality)
         };
 
         // DOM Elements
@@ -743,9 +745,24 @@
           try {
             const page = await state.pdfDocument.getPage(pageNumber);
 
-            const viewport = page.getViewport({ scale: 1.5 });
+            // Get the container dimensions
+            const container = elements.pdfViewer;
+            const containerWidth = container.clientWidth - 20; // Subtract padding for margins
+
+            // Get the page's original viewport
+            const originalViewport = page.getViewport({ scale: 1.0 });
+
+            // Calculate scale to fit width
+            state.displayScale = containerWidth / originalViewport.width;
+
+            // Create a new viewport with the calculated scale
+            const viewport = page.getViewport({ scale: state.displayScale });
+
             const canvas = elements.pdfCanvas;
             const context = canvas.getContext("2d");
+
+            // Clear the canvas first
+            context.clearRect(0, 0, canvas.width, canvas.height);
 
             canvas.height = viewport.height;
             canvas.width = viewport.width;
@@ -776,6 +793,7 @@
           }
         }
 
+        // Modify the extractCurrentPage function to render at a higher scale for OCR
         async function extractCurrentPage() {
           if (state.extracting) return;
 
@@ -786,35 +804,51 @@
           elements.progressText.textContent = "Processing: 0%";
 
           try {
-            const canvas = elements.pdfCanvas;
-            const imageData = canvas.toDataURL("image/png");
+            // Create a temporary canvas for OCR at a higher scale
+            const tempCanvas = document.createElement("canvas");
+            const tempContext = tempCanvas.getContext("2d");
+
+            // Get the current page
+            const page = await state.pdfDocument.getPage(state.currentPage);
+
+            // Create a viewport at a higher scale for better OCR results
+            const viewport = page.getViewport({ scale: state.ocrScale });
+
+            // Set canvas dimensions
+            tempCanvas.height = viewport.height;
+            tempCanvas.width = viewport.width;
+
+            // Render at higher scale
+            const renderContext = {
+              canvasContext: tempContext,
+              viewport: viewport,
+            };
+
+            await page.render(renderContext).promise;
+
+            // Get image data from the high-res canvas
+            const imageData = tempCanvas.toDataURL("image/png");
+
+            elements.progressBar.style.width = "25%";
+            elements.progressText.textContent = "Processing: 25%";
 
             const language = elements.languageSelect.value;
 
             if (!state.worker) {
-              // Create worker without logger
               state.worker = await Tesseract.createWorker();
             }
 
-            // Show initial progress
-            elements.progressBar.style.width = "25%";
-            elements.progressText.textContent = "Processing: 25%";
-
-            await state.worker.loadLanguage(language);
-
-            // Update progress after loading language
             elements.progressBar.style.width = "50%";
             elements.progressText.textContent = "Processing: 50%";
 
+            await state.worker.loadLanguage(language);
             await state.worker.initialize(language);
 
-            // Update progress after initialization
             elements.progressBar.style.width = "75%";
             elements.progressText.textContent = "Processing: 75%";
 
             const result = await state.worker.recognize(imageData);
 
-            // Complete progress
             elements.progressBar.style.width = "100%";
             elements.progressText.textContent = "Processing: 100%";
 
@@ -888,7 +922,7 @@
             // Clear previous results
             state.extractedText = {};
 
-            // Process each page
+            // For each page
             for (let pageNum = 1; pageNum <= state.totalPages; pageNum++) {
               // Update progress
               const progressPercent =
@@ -900,13 +934,32 @@
                 "extractionStatusText"
               ).textContent = `Extracting text from pages (${pageNum}/${state.totalPages})...`;
 
-              // Render the page
-              await renderPage(pageNum);
+              // Create a temporary canvas for OCR at a higher scale
+              const tempCanvas = document.createElement("canvas");
+              const tempContext = tempCanvas.getContext("2d");
 
-              // Extract text from the page
-              const canvas = elements.pdfCanvas;
-              const imageData = canvas.toDataURL("image/png");
+              // Get the current page
+              const page = await state.pdfDocument.getPage(pageNum);
 
+              // Create a viewport at a higher scale for better OCR results
+              const viewport = page.getViewport({ scale: state.ocrScale });
+
+              // Set canvas dimensions
+              tempCanvas.height = viewport.height;
+              tempCanvas.width = viewport.width;
+
+              // Render at higher scale
+              const renderContext = {
+                canvasContext: tempContext,
+                viewport: viewport,
+              };
+
+              await page.render(renderContext).promise;
+
+              // Get image data from the high-res canvas
+              const imageData = tempCanvas.toDataURL("image/png");
+
+              // Perform OCR on the high-res image
               const result = await state.worker.recognize(imageData);
               const text = result.data.text;
 
