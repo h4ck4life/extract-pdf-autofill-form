@@ -792,21 +792,32 @@
             const language = elements.languageSelect.value;
 
             if (!state.worker) {
-              state.worker = await Tesseract.createWorker({
-                logger: (message) => {
-                  if (message.status === "recognizing text") {
-                    const progress = Math.round(message.progress * 100);
-                    elements.progressBar.style.width = `${progress}%`;
-                    elements.progressText.textContent = `Processing: ${progress}%`;
-                  }
-                },
-              });
+              // Create worker without logger
+              state.worker = await Tesseract.createWorker();
             }
 
+            // Show initial progress
+            elements.progressBar.style.width = "25%";
+            elements.progressText.textContent = "Processing: 25%";
+
             await state.worker.loadLanguage(language);
+
+            // Update progress after loading language
+            elements.progressBar.style.width = "50%";
+            elements.progressText.textContent = "Processing: 50%";
+
             await state.worker.initialize(language);
 
+            // Update progress after initialization
+            elements.progressBar.style.width = "75%";
+            elements.progressText.textContent = "Processing: 75%";
+
             const result = await state.worker.recognize(imageData);
+
+            // Complete progress
+            elements.progressBar.style.width = "100%";
+            elements.progressText.textContent = "Processing: 100%";
+
             const text = result.data.text;
 
             // Store the text with page number as key
