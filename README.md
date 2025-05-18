@@ -2,7 +2,7 @@
 
 A web application that extracts text from PDF documents using OCR, analyzes the content with OpenAI, and automatically fills a form with the extracted information.
 
-![PDF Form Extractor Screenshot](https://i.imgur.com/dummy-screenshot.png)
+![PDF Form Extractor Screenshot](screenshot/home.png)
 
 ## Features
 
