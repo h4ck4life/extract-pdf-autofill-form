@@ -1,6 +1,7 @@
 services:
   web:
     image: nginx:alpine
+    container_name: pdfextract-autofill
     #ports:
     #  - "8080:80"
     volumes:
