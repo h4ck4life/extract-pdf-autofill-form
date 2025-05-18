@@ -22,13 +22,23 @@
     <div class="container mx-auto px-4 py-8 max-w-6xl">
       <header class="flex justify-between items-center mb-8">
         <h1 class="text-3xl font-bold">PDF Form Extractor</h1>
-        <button
-          id="themeToggle"
-          class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-        >
-          <i class="fas fa-moon dark:hidden"></i>
-          <i class="fas fa-sun hidden dark:block"></i>
-        </button>
+        <div class="flex items-center space-x-2">
+          
+            href="https://github.com/h4ck4life/extract-pdf-autofill-form"
+            target="_blank"
+            class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+            title="GitHub Repository"
+          >
+            <i class="fab fa-github text-xl"></i>
+          </a>
+          <button
+            id="themeToggle"
+            class="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+          >
+            <i class="fas fa-moon dark:hidden"></i>
+            <i class="fas fa-sun hidden dark:block"></i>
+          </button>
+        </div>
       </header>
 
       <main>
@@ -437,7 +447,10 @@
           language: "eng",
           worker: null,
           apiKey: localStorage.getItem("openai_api_key") || "",
-          isDarkMode: window.matchMedia("(prefers-color-scheme: dark)").matches,
+          isDarkMode:
+            localStorage.getItem("isDarkMode") !== null
+              ? localStorage.getItem("isDarkMode") === "true"
+              : window.matchMedia("(prefers-color-scheme: dark)").matches,
         };
 
         // DOM Elements
@@ -1134,6 +1147,8 @@
           } else {
             document.documentElement.classList.remove("dark");
           }
+          // Save the preference
+          localStorage.setItem("isDarkMode", state.isDarkMode);
         }
 
         function showToast(message, isError = false) {
