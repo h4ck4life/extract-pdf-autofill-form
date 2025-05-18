@@ -10,6 +10,12 @@
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.0.0/dist/tesseract.min.js"></script>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      // Configure Tailwind for dark mode
+      tailwind.config = {
+        darkMode: "class",
+      };
+    </script>
     <!-- Font Awesome -->
     <link
       rel="stylesheet"
@@ -448,9 +454,9 @@
           worker: null,
           apiKey: localStorage.getItem("openai_api_key") || "",
           isDarkMode:
-            localStorage.getItem("isDarkMode") !== null
-              ? localStorage.getItem("isDarkMode") === "true"
-              : window.matchMedia("(prefers-color-scheme: dark)").matches,
+            localStorage.getItem("isDarkMode") === "true" ||
+            (localStorage.getItem("isDarkMode") === null &&
+              window.matchMedia("(prefers-color-scheme: dark)").matches),
         };
 
         // DOM Elements
@@ -511,9 +517,34 @@
         };
 
         // Initialize theme based on user preference
+        console.log("Initial dark mode state:", state.isDarkMode);
         if (state.isDarkMode) {
           document.documentElement.classList.add("dark");
+
+          // Also make sure the icons are set correctly
+          const moonIcon = elements.themeToggle.querySelector(".fa-moon");
+          const sunIcon = elements.themeToggle.querySelector(".fa-sun");
+
+          moonIcon.classList.add("hidden");
+          sunIcon.classList.remove("hidden");
+
+          console.log("Dark mode initialized as ON");
+        } else {
+          document.documentElement.classList.remove("dark");
+
+          // Also make sure the icons are set correctly
+          const moonIcon = elements.themeToggle.querySelector(".fa-moon");
+          const sunIcon = elements.themeToggle.querySelector(".fa-sun");
+
+          moonIcon.classList.remove("hidden");
+          sunIcon.classList.add("hidden");
+
+          console.log("Dark mode initialized as OFF");
         }
+        console.log(
+          "HTML dark class:",
+          document.documentElement.classList.contains("dark")
+        );
 
         // Initialize API key input if stored
         if (state.apiKey) {
@@ -626,6 +657,7 @@
         });
 
         // Theme Toggle
+        console.log("Adding theme toggle event listener");
         elements.themeToggle.addEventListener("click", toggleTheme);
 
         // Form
@@ -1141,14 +1173,37 @@
         }
 
         function toggleTheme() {
+          console.log("Toggle theme clicked, current state:", state.isDarkMode);
           state.isDarkMode = !state.isDarkMode;
+          console.log("New state:", state.isDarkMode);
+
+          // Toggle the dark class on the HTML element
           if (state.isDarkMode) {
             document.documentElement.classList.add("dark");
           } else {
             document.documentElement.classList.remove("dark");
           }
-          // Save the preference
-          localStorage.setItem("isDarkMode", state.isDarkMode);
+
+          // Save the preference as a string
+          localStorage.setItem("isDarkMode", state.isDarkMode.toString());
+
+          // Log the updated state for debugging
+          console.log(
+            "Dark mode class applied:",
+            document.documentElement.classList.contains("dark")
+          );
+
+          // Force UI update (in case the class alone isn't triggering the change)
+          const moonIcon = elements.themeToggle.querySelector(".fa-moon");
+          const sunIcon = elements.themeToggle.querySelector(".fa-sun");
+
+          if (state.isDarkMode) {
+            moonIcon.classList.add("hidden");
+            sunIcon.classList.remove("hidden");
+          } else {
+            moonIcon.classList.remove("hidden");
+            sunIcon.classList.add("hidden");
+          }
         }
 
         function showToast(message, isError = false) {
