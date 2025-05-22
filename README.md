@@ -54,6 +54,25 @@ A web application that extracts text from PDF documents using OCR, analyzes the 
 
 6. Enter your OpenAI API key when prompted (or use the built-in mock data if you don't have a key).
 
+### Running with Docker
+
+You can also run the app using Docker Compose (requires Docker to be installed):
+
+1. Make sure the `nginxmanager_default` network exists, or create it:
+   ```bash
+   docker network create nginxmanager_default
+   ```
+2. Start the service:
+   ```bash
+   docker-compose -f docker-compose.dev.yml up -d
+   ```
+3. Open your browser and go to:
+   ```
+   http://localhost:8000
+   ```
+
+This will serve the app using Nginx in a container. Any changes to the `html/` folder will be reflected automatically.
+
 ## Code Structure
 
 The application is built as a single HTML file with embedded JavaScript for simplicity of deployment.
