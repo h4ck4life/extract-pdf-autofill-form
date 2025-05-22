@@ -1,0 +1,15 @@
+services:
+  web:
+    image: nginx:alpine
+    container_name: pdfextract-autofill
+    ports:
+      - "8000:80"
+    volumes:
+      - ./html:/usr/share/nginx/html:ro
+    networks:
+      - nginxmanager_default
+    restart: always
+
+networks:
+  nginxmanager_default:
+    external: true
